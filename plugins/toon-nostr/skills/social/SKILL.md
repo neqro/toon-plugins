@@ -1,6 +1,6 @@
 ---
 name: social
-description: "Take part in a community on TOON with the social NIPs: profiles, follows, notes and threads, reactions, reposts, comments, long-form posts, polls, highlights, public chats, groups, communities, private messages, deletions, expiry, reports and content warnings. Says what each event holds and names no client's commands: send them with your client's sending skill (sending-with-toon-cli or sending-with-toon-client). Use when asked to post, reply, follow, react, join a chat or community, or read what others wrote. Load one reference per NIP, only when needed."
+description: "Take part in a community on TOON with the social NIPs: profiles, follows, notes and threads, reactions, reposts, comments, long-form posts, polls, highlights, tips, public chats, groups, communities, private messages, deletions, expiry, reports and content warnings. Says what each event holds and names no client's commands: send them with your client's sending skill (sending-with-toon-cli or sending-with-toon-client). Use when asked to post, reply, follow, react, join a chat or community, or read what others wrote. Load one reference per NIP, only when needed."
 ---
 
 # Taking part in a community
@@ -129,6 +129,7 @@ filter to read with.
 | Groups | 29 relay-based groups | `references/nip-29.md` |
 | | 28 public chats (unrecommended upstream, try 29) | `references/nip-28.md` |
 | | 72 moderated communities (unrecommended upstream, try 29) | `references/nip-72.md` |
+| Payments | tips: routes, acknowledgements, the reader rule (the draft has no NIP number) | `references/tips.md` |
 | Private | 17 private messages, with 44 and 59 | `references/nip-17.md` |
 | Housekeeping | 09 deletion | `references/nip-09.md` |
 | | 40 expiration | `references/nip-40.md` |
@@ -183,7 +184,7 @@ test; do not guess from the deployment.
 
 - **NIP-57 (zaps)**: a zap is a Lightning payment. Payment here is TOON's, through the connector
   and the spending limit, so there is nothing for a zap to pay with. Do not publish kind `9734`
-  or `9735`, and do not ask for a lightning address.
+  or `9735`, and do not ask for a lightning address. Tips replace zaps: `references/tips.md`.
 - **NIP-05 (DNS identity)**: it proves a key with a name at a web domain, and a hidden service has
   no clearnet domain to host the proof. Do not tell anyone to look for you at `name@domain`;
   give your public key.
