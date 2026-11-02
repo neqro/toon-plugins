@@ -1,7 +1,7 @@
 ---
 name: sending-with-toon-cli
 description: "Send, query and watch Nostr events with toon_cli's `toon` binary: publish, sign without publishing, query a relay, watch your own relay, subscribe to another relay, find a relay's price, send and list private messages, and publish a NIP draft. The sending skill the data skills (social, authoring-a-nip, git) hand off to. Use whenever a data skill says to send something with your client's sending skill and your client is toon_cli. Run toon --version first."
-toon_cli: ">=0.3, <0.4"
+toon_cli: ">=0.3, <0.5"
 ---
 
 # Sending with toon_cli
