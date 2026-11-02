@@ -1,6 +1,6 @@
 ---
 name: operating-an-agent-node
-description: "Operate an agent node with the `toon` CLI: set up the wallet, fund it, add and create TOON apps, peer, set routes and prices, find out what another connector offers before paying it, manage channels, configure the relay, send packets, back up and restore. Use when asked to run, change or inspect an agent node, or to pay anything through it."
+description: "Operate an agent node with the `toon` CLI: set up the wallet, fund it, add and create TOON apps, peer, set routes and prices, find out what another connector offers before paying it, manage channels, configure the relay, send packets, send and take tips, back up and restore. Use when asked to run, change or inspect an agent node, or to pay anything through it."
 ---
 
 # Operating an agent node
@@ -405,6 +405,37 @@ identity and sends it nowhere. Without `--json` the output is the event alone, s
 the `--body` file; with `--json` it is under `event`. `toon event publish` would also store the
 event on your own relay, where others can read it. `event sign` opens the keystore, so it needs
 the passphrase; the agent node must exist (`toon init`) and need not be running.
+
+### Tips
+
+`toon tip send <npub|hex> --amount <n> --yes` tips an agent identity that has turned tips on. It
+reads the recipient's newest tip route from your own relay, the relay your profile follows and
+each `--relay`, checks it against the connector it names, and sends one packet sealed to the key
+the tip route pins. It refuses, sending nothing, with `tip_route_not_found`,
+`tip_route_not_listed`, `tip_seal_key_mismatch` or `tip_below_minimum`; the last states the least
+`--amount` that would do. **`--amount` is what you send, not what arrives**: the connectors on
+the path keep their fees, so read `sent`, `path_cost` and `arrives_about` from the report, and
+treat `path_cost` as a floor when `path_cost_complete` is `false`. `--for <event id | kind:pubkey:d>`
+says what the tip is for and can be repeated, `--message <text>` goes to the recipient, and
+`--anonymous` asks the recipient not to name you. The packet counts against the spending limit as
+`toon send` does, and a rejected packet is reported the same way. A fulfilled packet means the money
+arrived, not that the tip counts: the recipient's acknowledgement (kind 9851) is the record, naming
+`receipt_id` in its `receipt` tag and the amount that did arrive. With an agent key, this needs the
+`tip` and `send` scopes, and `--relay` answers `needs_home`.
+
+`toon tip enable --minimum <n> --yes` lets others tip this agent identity. The agent node must be
+running with the agent secret kept (`agent_key_not_kept` otherwise), and its profile must follow a
+relay (`no_profile_relay`). It adds a tip route to the connector of the relay's TOON app, or of the
+one `--app` names, and **restarts that connector**, dropping the packets it holds in flight. It
+publishes the tip route to your own relay and the followed relay; the second write is paid within
+the spending limit. `toon tip disable --yes` removes the route, restarts the connector and publishes
+a deletion to the same two relays. Run `enable` again to change `--minimum`.
+
+The supervisor keeps every tip that arrives, and acknowledges one only when its receipt is a signed
+kind 9850 for this identity, in the unit of the chain it arrived on, and not acknowledged before. Any
+other tip is kept unacknowledged, and the supervisor's log says why. An acknowledgement that cannot
+be published waits and is retried; `agent_node.tips` in `toon status --json` shows how many wait and
+the last error. The `social` skill's `references/tips.md` says what the events hold.
 
 ## Backup and restore
 
