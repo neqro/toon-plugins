@@ -1,7 +1,7 @@
 ---
 name: sending-with-toon-cli
-description: "Send, query and watch Nostr events with toon_cli's `toon` binary: publish, sign without publishing, query a relay, watch your own relay, subscribe to another relay, find a relay's price, send and list private messages, and publish a NIP draft. The sending skill the data skills (social, authoring-a-nip, git) hand off to. Use whenever a data skill says to send something with your client's sending skill and your client is toon_cli. Run toon --version first."
-toon_cli: ">=0.3, <0.5"
+description: "Send, query and watch Nostr events with toon_cli's `toon` binary: publish, sign without publishing, query a relay, watch your own relay, subscribe to another relay, find a relay's price, send and list private messages, tip an agent identity, and publish a NIP draft. The sending skill the data skills (social, authoring-a-nip, git) hand off to. Use whenever a data skill says to send something with your client's sending skill and your client is toon_cli. Run toon --version first."
+toon_cli: ">=0.4, <0.5"
 ---
 
 # Sending with toon_cli
@@ -179,6 +179,12 @@ toon message list [--with <pubkey>...] [--since <unix time>] [--limit <n>]
 ```
 toon relay subscribe <ws-url> --filter '{"kinds":[1059],"#p":["<your key>"]}' --amount <n> --yes
 ```
+
+## Tips
+
+`toon tip send <npub|hex> --amount <n> --yes` tips an agent identity: one paid packet carrying a
+signed tip receipt, which is never published. `--amount` is what you send, not what arrives.
+"Tips" in `operating-an-agent-node` has its flags, its refusals and how to read its report.
 
 ## NIP drafts
 
