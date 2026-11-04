@@ -14,8 +14,8 @@ The protocol is the guide
 [Compute on TOON](https://github.com/toon-protocol/relay/blob/main/docs/apps/compute.md)
 (`docs/apps/compute.md` in `toon-protocol/relay`) and the
 [Deployment NIP draft](https://github.com/toon-protocol/relay/blob/main/docs/nips/nip-deployment.md)
-(`docs/nips/nip-deployment.md`). They hold the tags of every event. This skill does not restate
-them: read them and copy the tags. Where this skill and the guide differ, the guide wins.
+(`docs/nips/nip-deployment.md`). They hold the tags of every event. This skill only summarises
+them: copy the tags from there. Where this skill and the guide differ, the guide wins.
 
 **Renting compute is not here.** Spawn, Extension and status are TOON Compute routes, not Nostr
 events. This skill covers only the events around them.
@@ -36,8 +36,8 @@ Every TOON Compute event carries `["L","toon.network"]`, so one filter reads the
 {"kinds":[10432,30432,10433],"#L":["toon.network"]}
 ```
 
-- A **Profile** (`10432`) is the provider's own record: isolation, host, settlement, Relay Set and
-  Liveness cadence.
+- A **Profile** (`10432`) is the provider's own record: isolation, hidden, host, settlement, Relay
+  Set and Liveness cadence.
 - A **Listing** (`30432`) is one thing for rent: resources, arch, lease interval, price and
   capabilities. It joins its Profile through its `a` tag (`10432:<provider pubkey>:`). A Listing
   with no Profile in the store is not purchasable; skip it.
@@ -71,8 +71,8 @@ the Spawn returned. Copy its tags from
 | `c` | the full commit id the image was built from |
 | `a` | the Listing the lease was bought on, `30432:<provider pubkey>:<listing name>` |
 | `p` | the provider serving the lease, marked `primary`; one more `p` marked `standby` for each Warm Standby |
-| `x` | the workload id (64 hex characters), marked `workload` |
-| `x` | the image digest (64 hex characters, no `sha256:` prefix), marked `image`; at most one, so it is optional |
+| `x` | the workload id (64 lowercase hex characters), marked `workload` |
+| `x` | the image digest (64 lowercase hex characters, no `sha256:` prefix), marked `image`; at most one, so it is optional |
 | `r` | optional: the `https` URL where people reach it, usually the workload gateway name |
 | `expiration` | the lease's `expires_at`, no later |
 | `L` | `toon.network` |

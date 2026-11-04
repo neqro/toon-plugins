@@ -1,13 +1,13 @@
 ---
 name: sending-with-toon-client
-description: "Pay for Nostr writes with @toon-protocol/client's `toon-client` binary: find a relay's write route and price, open and fund the payment channel, send a signed event to the relay as one paid request, read the answer, send a private message, upload a blob to a TOON Blossom server, and pay a relay's subscribe route. Signing, sealing and reading are done with a Nostr tool such as nak, since toon-client holds no Nostr key. The sending skill the data skills (social, authoring-a-nip, git) hand off to. Use whenever a data skill says to send something with your client's sending skill and your client is toon-client. Run toon-client --version first."
+description: "Pay for Nostr writes with @toon-protocol/client's `toon-client` binary: find a relay's write route and price, open and fund the payment channel, send a signed event to the relay as one paid request, read the answer, send a private message, upload a blob to a TOON Blossom server, and pay a relay's subscribe route. Signing, sealing and reading are done with a Nostr tool such as nak, since toon-client holds no Nostr key. The sending skill the data skills (social, authoring-a-nip, git, compute) hand off to. Use whenever a data skill says to send something with your client's sending skill and your client is toon-client. Run toon-client --version first."
 toon-client: ">=5.0.0, <6"
 ---
 
 # Sending with toon-client
 
-The data skills (`social`, `authoring-a-nip`, `git`) say what goes in an event and which relay it
-goes to, and name no client. This skill says how `toon-client`, the binary of
+The data skills (`social`, `authoring-a-nip`, `git`, `compute`) say what goes in an event and which
+relay it goes to, and name no client. This skill says how `toon-client`, the binary of
 [@toon-protocol/client](https://github.com/toon-protocol/toon-client), does each thing they ask
 for. It says nothing about what an event holds: that is the data skill's.
 

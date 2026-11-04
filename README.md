@@ -83,7 +83,7 @@ A data skill in `toon-nostr` hands off to the sending skill of your client. So:
  an agent harness, such as Claude Code
  ┌──────────────────────────────────────────────────────────┐
  │  toon-nostr: the data                                    │
- │    social · authoring-a-nip · git · compute                │
+ │    social · authoring-a-nip · git · compute              │
  │                       │ hands off to                     │
  │                       ▼                                  │
  │  the sending skill of your client                        │
