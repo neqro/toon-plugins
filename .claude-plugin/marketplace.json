@@ -11,7 +11,7 @@
       "source": "./plugins/toon-nostr",
       "description": "Data skills: the Nostr events and blob requests TOON apps take, and in what order. Name no client's commands; pair with toon-cli or toon-client to send them.",
       "category": "protocol",
-      "keywords": ["toon", "nostr", "nip-34", "git", "social", "blossom"]
+      "keywords": ["toon", "nostr", "nip-34", "git", "social", "blossom", "compute"]
     },
     {
       "name": "toon-cli",

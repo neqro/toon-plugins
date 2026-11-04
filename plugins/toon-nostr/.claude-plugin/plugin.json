@@ -8,5 +8,5 @@
   },
   "repository": "https://github.com/toon-protocol/toon-plugins",
   "license": "MIT",
-  "keywords": ["toon", "nostr", "nip-34", "git", "social", "blossom"]
+  "keywords": ["toon", "nostr", "nip-34", "git", "social", "blossom", "compute"]
 }
