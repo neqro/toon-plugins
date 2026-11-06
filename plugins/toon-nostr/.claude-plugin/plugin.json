@@ -1,6 +1,6 @@
 {
   "name": "toon-nostr",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Data skills: the Nostr events and blob requests TOON apps take, and in what order. Name no client; pair with toon-cli or toon-client to send them.",
   "author": {
     "name": "TOON Protocol",
@@ -8,5 +8,5 @@
   },
   "repository": "https://github.com/toon-protocol/toon-plugins",
   "license": "MIT",
-  "keywords": ["toon", "nostr", "nip-34", "git", "social", "blossom"]
+  "keywords": ["toon", "nostr", "nip-34", "git", "social", "blossom", "compute"]
 }

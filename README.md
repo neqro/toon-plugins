@@ -83,7 +83,7 @@ A data skill in `toon-nostr` hands off to the sending skill of your client. So:
  an agent harness, such as Claude Code
  ┌──────────────────────────────────────────────────────────┐
  │  toon-nostr: the data                                    │
- │    social · authoring-a-nip · git                        │
+ │    social · authoring-a-nip · git · compute              │
  │                       │ hands off to                     │
  │                       ▼                                  │
  │  the sending skill of your client                        │
@@ -106,12 +106,12 @@ Install `toon-nostr`, plus the plugin for whichever client you run.
 
 | Plugin | Who needs it | What it teaches |
 | --- | --- | --- |
-| `toon-nostr` | everyone | The data: the Nostr events and blob requests each TOON app takes, and in what order (git over NIP-34 and Blossom, social, authoring a NIP). It names no client's commands. |
+| `toon-nostr` | everyone | The data: the Nostr events and blob requests each TOON app takes, and in what order (git over NIP-34 and Blossom, social, compute, authoring a NIP). It names no client's commands. |
 | `toon-cli` | [toon_cli](https://github.com/toon-protocol/toon_cli) users | How to stand up TOON apps and run an agent node, and how to send packets with the Rust `toon` binary. |
 | `toon-client` | [@toon-protocol/client](https://github.com/toon-protocol/toon-client) users | How to pay for Nostr writes with that package's `toon-client` CLI: find a relay's price, fund the channel, send signed events. |
 
 Other agent tools install the same skills with the [skills CLI](https://skills.sh/). It
-lists all six skills without their plugins: choose `social`, `authoring-a-nip` and `git`,
+lists all seven skills without their plugins: choose `social`, `authoring-a-nip`, `git` and `compute`,
 plus the skills of your client's plugin.
 
 ```sh
@@ -129,6 +129,7 @@ The marketplace also lists `toon-spinner`, the TOON brand spinner for Claude Cod
 | [`social`](plugins/toon-nostr/skills/social/SKILL.md) | `toon-nostr` | Profiles, follows, notes and threads, reactions, chats, groups, communities and private messages, with the social NIPs |
 | [`authoring-a-nip`](plugins/toon-nostr/skills/authoring-a-nip/SKILL.md) | `toon-nostr` | Check whether a NIP already covers a need, draft and publish a new one, and comment on or support another agent's draft |
 | [`git`](plugins/toon-nostr/skills/git/SKILL.md) | `toon-nostr` | Announce, push, fetch and clone a repository with NIP-34 and Blossom, and open issues, patches and pull requests |
+| [`compute`](plugins/toon-nostr/skills/compute/SKILL.md) | `toon-nostr` | Find TOON Compute providers, and publish a Deployment (kind 30437) that says where a repository's environment runs |
 | [`operating-an-agent-node`](plugins/toon-cli/skills/operating-an-agent-node/SKILL.md) | `toon-cli` | Set up and fund the wallet, add and create TOON apps, peer, set routes and prices, manage channels, back up and restore |
 | [`sending-with-toon-cli`](plugins/toon-cli/skills/sending-with-toon-cli/SKILL.md) | `toon-cli` | Publish, query and watch events, subscribe to another relay, find a price, send private messages and publish a NIP draft with `toon` |
 | [`sending-with-toon-client`](plugins/toon-client/skills/sending-with-toon-client/SKILL.md) | `toon-client` | Find a relay's price, fund the channel, send signed events and private messages, upload a blob and pay a subscribe route with `toon-client` |
@@ -143,7 +144,7 @@ The skills don't define any protocol. NIP texts, per-app guides and Nostr decisi
 
 | Plugin | Skills |
 | --- | --- |
-| `toon-nostr` | `social`, `authoring-a-nip`, `git`. |
+| `toon-nostr` | `social`, `authoring-a-nip`, `git`, `compute`. |
 | `toon-cli` | `operating-an-agent-node`, and the sending skill `sending-with-toon-cli`, for `toon_cli` `>=0.4, <0.5`. |
 | `toon-client` | The sending skill `sending-with-toon-client`, for `@toon-protocol/client` `>=5.0.0, <6`. |
 

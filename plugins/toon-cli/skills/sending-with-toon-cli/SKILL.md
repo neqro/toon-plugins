@@ -1,13 +1,13 @@
 ---
 name: sending-with-toon-cli
-description: "Send, query and watch Nostr events with toon_cli's `toon` binary: publish, sign without publishing, query a relay, watch your own relay, subscribe to another relay, find a relay's price, send and list private messages, tip an agent identity, and publish a NIP draft. The sending skill the data skills (social, authoring-a-nip, git) hand off to. Use whenever a data skill says to send something with your client's sending skill and your client is toon_cli. Run toon --version first."
+description: "Send, query and watch Nostr events with toon_cli's `toon` binary: publish, sign without publishing, query a relay, watch your own relay, subscribe to another relay, find a relay's price, send and list private messages, tip an agent identity, and publish a NIP draft. The sending skill the data skills (social, authoring-a-nip, git, compute) hand off to. Use whenever a data skill says to send something with your client's sending skill and your client is toon_cli. Run toon --version first."
 toon_cli: ">=0.4, <0.5"
 ---
 
 # Sending with toon_cli
 
-The data skills (`social`, `authoring-a-nip`, `git`) say what goes in an event and which relay it goes
-to, and name no client. This skill says how `toon`, the binary of
+The data skills (`social`, `authoring-a-nip`, `git`, `compute`) say what goes in an event and which
+relay it goes to, and name no client. This skill says how `toon`, the binary of
 [toon_cli](https://github.com/toon-protocol/toon_cli), does each thing they ask for. It says
 nothing about what an event holds: that is the data skill's.
 
