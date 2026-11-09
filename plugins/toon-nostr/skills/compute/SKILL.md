@@ -18,7 +18,8 @@ The protocol is the guide
 them: copy the tags from there. Where this skill and the guide differ, the guide wins.
 
 **Renting compute is not here.** Spawn, Extension and status are TOON Compute routes, not Nostr
-events. This skill covers only the events around them.
+events. This skill covers only the events around them. toon_cli users rent with
+`renting-compute-with-toon-cli`.
 
 ## What you do
 

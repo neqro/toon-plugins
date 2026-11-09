@@ -1,7 +1,6 @@
 ---
 name: renting-compute-with-toon-cli
 description: "Rent TOON Compute for a task with toon_cli's `toon compute`: choose a Listing, cap the spend, spawn a workload from a pinned image, extend the prepaid lease while the task runs, terminate it when the task ends, keep the lease's root secret, and report what was spent. Use when asked to rent, run or deploy a workload (an image) on TOON Compute, or to extend, check or end such a lease. Finding providers and publishing a Deployment event are the `compute` data skill's. Run toon --version first."
-toon_cli: ">=0.5, <0.6"
 ---
 
 # Renting compute with toon_cli
@@ -11,7 +10,7 @@ how to find or compare providers, or what a Deployment event holds: that is the 
 skill's. For what every `toon` command shares (`--json`, exit codes, `--yes`, the passphrase, the
 spending limit) read `operating-an-agent-node`; for the other things `toon` sends, read
 `sending-with-toon-cli`. Run `toon --version` first, as that skill says. If it is outside
-`>=0.5, <0.6`, stop and tell the operator.
+the range that skill declares, stop and tell the operator.
 
 Pass `--json` to read a result as one document, and branch on `error.code`, not on the message.
 If a flag here is missing from `toon compute <command> --help`, trust `--help`.
@@ -32,8 +31,7 @@ Get each of these from the operator's request, and ask for what is missing (or u
 control) rather than guessing:
 
 - **The Listing**: an `naddr` or `30432:<pubkey>:<d>`. With none given, use the `compute` data
-  skill to find and choose one (the cheapest live Listing whose resources, arch and capabilities
-  fit). Don't restate its rules here.
+  skill to find and choose one.
 - **The image**, pinned by digest: `<repo>@sha256:<hex>`, or `sha256:<hex>` with
   `--registry-entry`. A tag is refused (`image_not_pinned`): resolve it to its digest first, or
   ask.
@@ -79,7 +77,8 @@ toon compute list --check
 ```
 
 `status` is free. Read it, and **before `expires_at`** run `extend` for as many intervals as the
-task still needs (`--max` changes the limit). **Never extend once the task is done.** `list`
+task still needs (`--max` changes the limit). `extend` can also end in `lease_partly_paid`:
+handle it as under Spawn. **Never extend once the task is done.** `list`
 shows the leases held here; `--check` asks the provider about each.
 
 ## 5. When the task ends
