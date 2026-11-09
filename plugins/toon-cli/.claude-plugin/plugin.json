@@ -8,5 +8,5 @@
   },
   "repository": "https://github.com/toon-protocol/toon-plugins",
   "license": "MIT",
-  "keywords": ["toon", "operator", "agent-node", "ilp"]
+  "keywords": ["toon", "operator", "agent-node", "ilp", "compute", "lease", "rent"]
 }

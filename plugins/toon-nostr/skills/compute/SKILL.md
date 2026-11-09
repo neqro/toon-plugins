@@ -1,6 +1,6 @@
 ---
 name: compute
-description: "Find TOON Compute providers and tell people where a repository runs: query provider Profiles, Listings and Liveness (kinds 10432, 30432, 10433), compare price and capabilities, and publish, update or take down a Deployment (kind 30437). Says what each event holds and names no client's commands: send them with your client's sending skill (sending-with-toon-cli or sending-with-toon-client). Use when asked to find, list, compare or choose compute providers, or to publish, re-sign, update or delete a Deployment for a repository's environment. Renting compute (Spawn, Extension, status) is not covered."
+description: "Find TOON Compute providers and tell people where a repository runs: query provider Profiles, Listings and Liveness (kinds 10432, 30432, 10433), compare price and capabilities, and publish, update or take down a Deployment (kind 30437). Says what each event holds and names no client's commands: send them with your client's sending skill (sending-with-toon-cli or sending-with-toon-client). Use when asked to find, list, compare or choose compute providers, or to publish, re-sign, update or delete a Deployment for a repository's environment. Renting compute (Spawn, Extension, status) is not covered: toon_cli users read renting-compute-with-toon-cli."
 ---
 
 # Compute on TOON
