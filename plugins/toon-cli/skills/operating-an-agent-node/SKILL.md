@@ -1,6 +1,6 @@
 ---
 name: operating-an-agent-node
-description: "Operate an agent node with the `toon` CLI: set up the wallet, fund it, add and create TOON apps, peer, set routes and prices, find out what another connector offers before paying it, manage channels, configure the relay, send packets, send and receive tips, back up and restore. Use when asked to run, change or inspect an agent node, or to pay anything through it."
+description: "Operate an agent node with the `toon` CLI: set up the wallet, fund it, add and create TOON apps, peer, set routes and prices, find out what another connector offers before paying it, manage channels, configure the relay, send packets, send and receive tips, make a connector a zk edge, back up and restore. Use when asked to run, change or inspect an agent node, or to pay anything through it."
 ---
 
 # Operating an agent node
@@ -22,6 +22,9 @@ command here is missing from `toon --help`, the skill is out of date: trust `--h
   key that is not a payment key.
 - **Hidden service**: a connector reachable only at its onion endpoint, a `.anyone` address.
   **Clearnet** is an ordinary public hostname, and is never the default.
+- **Zk edge**: a connector that also takes packets paid from zk allowances, priced in MINA.
+  **Zk allowance**: a budget a payer opens at a zk edge against a note in a vault, without
+  saying which note. Always two words: a bare "allowance" is something you let an app do.
 
 ## How every command behaves
 
@@ -107,6 +110,8 @@ handed it to you instead of running them. If you set the agent node up, they are
 - `toon wallet backup` and `toon wallet restore` hold or replace the wallet.
 - `toon limit set` changes the spending limit that constrains you.
 - `toon tip enable` and `toon tip disable` restart a connector, dropping the packets it holds.
+- `toon zk enable` and `toon zk disable` restart a connector, and a zk edge without a collector
+  and a challenger beside it loses money.
 - `toon skill install` replaces the skills you were given.
 
 ## Setup
@@ -438,6 +443,45 @@ its receipt is valid, for this identity, in the unit of the chain it arrived on,
 before. Any other is never acknowledged, and only the supervisor's log records it. An
 acknowledgement that cannot be published waits and is retried; `agent_node.tips.acknowledgements`
 in `toon status --json` has `waiting` and `last_error`.
+
+## Zk edge
+
+`toon zk enable` makes the connector of the first TOON app, or of the one `--app` names, a zk edge.
+It needs the passphrase, because it derives the zk edge's state key from the wallet, and it
+**restarts that connector**, so it needs `--yes`. Name every setting:
+
+```sh
+toon zk enable --vault <B62…> --network mina:devnet \
+  --graphql-url <daemon graphql> --archive-url <archive graphql> \
+  --tier <nanomina> --open-budget-cap <nanomina> --rate <tokens per MINA> --yes --json
+```
+
+- `--tier` is a zk allowance budget in nanomina. Repeat it for more; each must be one zk_toon
+  publishes. `--open-budget-cap` is the most all open zk allowances may add up to, which is what
+  you risk at once.
+- `--zk-allowance-lifetime <seconds>` defaults to 3600 and is at most 43200. `--subsidy-budget
+  <nanomina>` defaults to 0, which offers no subsidised zk allowance.
+- `--rate` is whole settlement tokens per MINA, such as `0.40` or `2/5`. It is static until the next
+  restart, so **declare it below what MINA is worth**: forwarding at a rate above MINA's value pays
+  out more than comes in. A TOON app that settles on a chain is refused without it.
+
+`toon` checks the settings with the connector's own validation **before** anything restarts. A
+setting the connector refuses, such as a tier zk_toon does not publish or a missing `--rate`,
+answers `zk_edge_invalid` with the connector's reason, and nothing changes. A vault the connector
+cannot read when it starts fails the restart instead, and the change is rolled back. Run `enable`
+again to change the settings, naming every one. The report's `state_key` is the key payers see the
+zk edge sign with.
+
+**What `toon` does not run.** Tell whoever handed you the agent node, and do not turn a zk edge on
+unless both of these run beside it: a **collector**, without which the zk edge is never paid out of
+the vault, and a **challenger** (`zk-toon-challenger`), without which a payer's dishonest escape
+keeps money the zk edge already forwarded. Until the zk edge signs mutual-close clearances, its
+payers leave the vault only by escape.
+
+`toon zk disable --yes` removes the zk edge settings and restarts the connector, and answers
+`zk_edge_not_enabled` when that TOON app is not a zk edge. Zk allowances still open can no longer be
+paid there, and their payers leave by escape, which the challenger still has to watch. Paying from a
+zk allowance is not something `toon` does: that is the wallet in `toon-client`.
 
 ## Backup and restore
 

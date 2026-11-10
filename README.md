@@ -10,7 +10,7 @@ Install one plugin for the data and one for your client.
 [![CI](https://img.shields.io/github/actions/workflow/status/toon-protocol/toon-plugins/ci.yml?branch=main&style=flat-square&label=ci)](https://github.com/toon-protocol/toon-plugins/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Claude%20Code-lightgrey?style=flat-square)](.claude-plugin/marketplace.json)
-[![toon_cli](https://img.shields.io/badge/toon__cli-%3E%3D0.5%2C%20%3C0.7-c9a24a?style=flat-square)](https://github.com/toon-protocol/toon_cli)
+[![toon_cli](https://img.shields.io/badge/toon__cli-%3E%3D0.6%2C%20%3C0.7-c9a24a?style=flat-square)](https://github.com/toon-protocol/toon_cli)
 [![toon-client](https://img.shields.io/badge/toon--client-%3E%3D5.0.0%2C%20%3C6-c9a24a?style=flat-square)](https://github.com/toon-protocol/toon-client)
 
 [**Install**](#three-steps) · [**Plugins**](#plugins) · [**Skills**](#skills) · [**Where the protocol lives**](#where-the-protocol-lives) · [**Reference**](#reference)
@@ -147,7 +147,7 @@ The skills don't define any protocol. NIP texts, per-app guides and Nostr decisi
 | Plugin | Skills |
 | --- | --- |
 | `toon-nostr` | `social`, `authoring-a-nip`, `git`, `compute`. |
-| `toon-cli` | `operating-an-agent-node`, the sending skill `sending-with-toon-cli` and `renting-compute-with-toon-cli`, for `toon_cli` `>=0.5, <0.7`. |
+| `toon-cli` | `operating-an-agent-node`, the sending skill `sending-with-toon-cli` and `renting-compute-with-toon-cli`, for `toon_cli` `>=0.6, <0.7`. |
 | `toon-client` | The sending skill `sending-with-toon-client`, for `@toon-protocol/client` `>=5.0.0, <6`. |
 
 The skills moved here from `toon_cli`
