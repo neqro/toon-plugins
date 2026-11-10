@@ -1,6 +1,6 @@
 ---
 name: compute
-description: "Find TOON Compute providers and tell people where a repository runs: query provider Profiles, Listings and Liveness (kinds 10432, 30432, 10433), compare price and capabilities, and publish, update or take down a Deployment (kind 30437). Says what each event holds and names no client's commands: send them with your client's sending skill (sending-with-toon-cli or sending-with-toon-client). Use when asked to find, list, compare or choose compute providers, or to publish, re-sign, update or delete a Deployment for a repository's environment. Renting compute (Spawn, Extension, status) is not covered."
+description: "Find TOON Compute providers and tell people where a repository runs: query provider Profiles, Listings and Liveness (kinds 10432, 30432, 10433), compare price and capabilities, and publish, update or take down a Deployment (kind 30437). Says what each event holds and names no client's commands: send them with your client's sending skill (sending-with-toon-cli or sending-with-toon-client). Use when asked to find, list, compare or choose compute providers, or to publish, re-sign, update or delete a Deployment for a repository's environment. Renting compute (Spawn, Extension, status) is not covered: toon_cli users read renting-compute-with-toon-cli."
 ---
 
 # Compute on TOON
@@ -18,7 +18,8 @@ The protocol is the guide
 them: copy the tags from there. Where this skill and the guide differ, the guide wins.
 
 **Renting compute is not here.** Spawn, Extension and status are TOON Compute routes, not Nostr
-events. This skill covers only the events around them.
+events. This skill covers only the events around them. toon_cli users rent with
+`renting-compute-with-toon-cli`.
 
 ## What you do
 
