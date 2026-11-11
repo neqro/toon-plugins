@@ -81,13 +81,38 @@ type Sandbox = Awaited<ReturnType<typeof sandcastle.createSandbox>>;
 /** Where the fresh token is staged inside the container. Mode 600, deleted after use. */
 const TOKEN_PATH = '/tmp/.sandcastle-push-token';
 
+/** `owner/repo` this run pushes to. Validated so it is safe inside the helper below. */
+const REPO: string = (() => {
+  const value =
+    process.env.GITHUB_REPOSITORY?.trim() ||
+    execFileSync('gh', ['repo', 'view', '--json', 'nameWithOwner', '--jq', '.nameWithOwner'], {
+      encoding: 'utf8',
+    }).trim();
+  if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(value)) {
+    throw new Error(`Unexpected repository name: ${JSON.stringify(value)}`);
+  }
+  return value;
+})();
+
+/** The only push URLs this runner will send a credential to. */
+const PUSH_URLS = new Set([`https://github.com/${REPO}`, `https://github.com/${REPO}.git`]);
+
 // Git credential helper that reads the token from TOKEN_PATH. The empty
 // `credential.helper=` before it on the command line resets git's helper list, so
 // the helper `gh auth setup-git` installed (holding the token from container start)
 // is not consulted first. The token reaches the file over stdin, so it never
 // appears in argv or in a log line.
+//
+// The agent sessions run before the push with write access to the checkout, so
+// they could repoint `origin` (or add an `insteadOf` rewrite) at a server they
+// control. The helper therefore answers only for https://github.com/<this repo>
+// (`credential.useHttpPath` makes git send the path) and stays silent for any
+// other host or repository, and pushBranch checks origin's push URL first.
 const FRESH_CREDENTIAL_HELPER =
-  `!f() { test "$1" = get && ` +
+  `!f() { test "$1" = get || return 0; p=; h=; u=; ` +
+  `while IFS== read -r k v; do case "$k" in protocol) p=$v;; host) h=$v;; path) u=$v;; esac; done; ` +
+  `test "$p" = https && test "$h" = github.com && ` +
+  `{ test "$u" = ${REPO} || test "$u" = ${REPO}.git; } && ` +
   `{ echo username=x-access-token; echo "password=$(cat ${TOKEN_PATH})"; }; }; f`;
 
 /**
@@ -106,6 +131,16 @@ async function pushBranch(
     return false;
   };
 
+  // Refuse before any credential exists in the container if origin no longer
+  // points at this repository. `get-url` expands insteadOf rewrites.
+  const remote = await sandbox.exec('git remote get-url --push --all origin');
+  const urls = remote.stdout.split('\n').map((line) => line.trim()).filter(Boolean);
+  if (remote.exitCode !== 0 || urls.length === 0 || !urls.every((url) => PUSH_URLS.has(url))) {
+    return fail(
+      `[${label}] origin's push URL is not https://github.com/${REPO}; refusing to push with a credential.`
+    );
+  }
+
   let token: string;
   try {
     const minted = await mintAppToken();
@@ -123,7 +158,8 @@ async function pushBranch(
 
   try {
     const push = await sandbox.exec(
-      `git -c credential.helper= -c credential.helper='${FRESH_CREDENTIAL_HELPER}' ` +
+      `git -c credential.helper= -c credential.useHttpPath=true ` +
+        `-c credential.helper='${FRESH_CREDENTIAL_HELPER}' ` +
         `push --no-verify -u origin ${branch}`,
       { onLine: (line) => console.log(`  [${label}] ${line}`) }
     );

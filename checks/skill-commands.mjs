@@ -184,7 +184,8 @@ function realBinaries() {
       return join(dir, target, 'toon');
     }
     if (binary === 'toon-client') {
-      execFileSync('npm', ['install', '--no-audit', '--no-fund', '--prefix', dir, `@toon-protocol/client@${version}`], {
+      // --ignore-scripts: the gate runs `--help`, so no package needs to run code at install time.
+      execFileSync('npm', ['install', '--ignore-scripts', '--no-audit', '--no-fund', '--prefix', dir, `@toon-protocol/client@${version}`], {
         stdio: ['ignore', 'ignore', 'inherit'],
       });
       return join(dir, 'node_modules', '.bin', 'toon-client');

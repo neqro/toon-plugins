@@ -31,7 +31,8 @@
       "name": "toon-spinner",
       "source": {
         "source": "github",
-        "repo": "toon-protocol/toon-spinner"
+        "repo": "toon-protocol/toon-spinner",
+        "sha": "aed3845eb47f93e89862708ee9e9ec7c65175f11"
       },
       "description": "TOON Protocol brand spinner for Claude Code (terminal and desktop app).",
       "category": "appearance",
