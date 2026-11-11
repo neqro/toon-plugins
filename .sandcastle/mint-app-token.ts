@@ -82,9 +82,15 @@ function appJwt(appId: string, privateKey: string): string {
   return `${unsigned}.${signer.sign(pem, 'base64url')}`;
 }
 
-async function githubJson(path: string, jwt: string, method: 'GET' | 'POST'): Promise<unknown> {
+async function githubJson(
+  path: string,
+  jwt: string,
+  method: 'GET' | 'POST',
+  body?: unknown
+): Promise<unknown> {
   const res = await fetch(`https://api.github.com${path}`, {
     method,
+    ...(body === undefined ? {} : { body: JSON.stringify(body) }),
     headers: {
       Authorization: `Bearer ${jwt}`,
       Accept: 'application/vnd.github+json',
@@ -101,6 +107,16 @@ async function githubJson(path: string, jwt: string, method: 'GET' | 'POST'): Pr
   }
   return res.json();
 }
+
+/**
+ * The only access the runner's writes need: push the branch, open and label
+ * the PR, and move the issue's labels. Metadata read is always included.
+ */
+const TOKEN_PERMISSIONS = {
+  contents: 'write',
+  pull_requests: 'write',
+  issues: 'write',
+} as const;
 
 /**
  * Mint a fresh installation token scoped to this repository.
@@ -137,13 +153,23 @@ export async function mintAppToken(): Promise<MintedToken> {
     );
   }
 
+  // The App is installed org-wide, so an unrestricted installation token would
+  // reach every repository it covers. This token is staged inside the agent's
+  // sandbox, so ask for this one repository and the three write permissions
+  // the runner uses, nothing else.
+  const repo = nameWithOwner();
   const minted = (await githubJson(
     `/app/installations/${installation.id}/access_tokens`,
     jwt,
-    'POST'
-  )) as { token?: string };
+    'POST',
+    { repositories: [repo.slice(repo.indexOf('/') + 1)], permissions: TOKEN_PERMISSIONS }
+  )) as { token?: string; repositories?: { full_name?: string }[] };
   if (!minted.token) {
     throw new Error('GitHub returned an installation-token response with no `token` field.');
+  }
+  const scoped = minted.repositories?.map((r) => r.full_name?.toLowerCase());
+  if (scoped?.length !== 1 || scoped[0] !== repo.toLowerCase()) {
+    throw new Error(`GitHub did not scope the installation token to ${repo} alone.`);
   }
 
   return { token: minted.token, source: 'app' };
