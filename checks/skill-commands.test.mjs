@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { test } from 'node:test';
 
-import { checkRepo, lowestVersion, namedCommands, namedFlags } from './skill-commands.mjs';
+import { checkRepo, lowestVersion, namedCommands, namedFlags, outsideCodeBlocks } from './skill-commands.mjs';
 
 /** A repository holding `files` (path → text), as a directory. */
 function repo(files) {
@@ -199,4 +199,106 @@ test('a backtick inside a code block does not hide the inline spans after it', (
 
   assert.deepEqual(namedCommands(text, 'toon-client'), [['channel', 'status'], ['send']]);
   assert.deepEqual(namedFlags(text, 'toon-client'), [{ command: ['send'], flag: '--amount' }]);
+});
+
+test('a flag after a pipe, `&&`, `;`, `)` or a bare `--` is not the command\'s', () => {
+  const text = [
+    '```',
+    'toon event query --kind 1 | jq --raw-output',
+    'toon-client send g.toon.relay --amount 5 && nak event --sec K',
+    'toon x -- --literal',
+    'toon y --a; toon z --b',
+    '(toon w --c) --outside',
+    '```',
+  ].join('\n');
+
+  assert.deepEqual(namedFlags(text, 'toon'), [
+    { command: ['event', 'query'], flag: '--kind' },
+    { command: ['y'], flag: '--a' },
+  ]);
+  assert.deepEqual(namedFlags(text, 'toon-client'), [{ command: ['send'], flag: '--amount' }]);
+  assert.deepEqual(namedCommands(text, 'toon'), [['event', 'query'], ['x'], ['y']]);
+});
+
+test('a flag on a line continued with a backslash is the command\'s', () => {
+  const text = ['```sh', 'toon send <to> \\', '  --max-fee 3 \\', '  --relay r', '```'].join('\n');
+
+  assert.deepEqual(namedCommands(text, 'toon'), [['send']]);
+  assert.deepEqual(namedFlags(text, 'toon'), [
+    { command: ['send'], flag: '--max-fee' },
+    { command: ['send'], flag: '--relay' },
+  ]);
+});
+
+test('a made-up word in the middle of a command path fails, not only the last one', async () => {
+  const root = repo({
+    'plugins/toon-client/skills/sending-with-toon-client/SKILL.md': sendingWithToonClient(
+      'Run `toon-client channel status`, not `toon-client channel frobnicate status`.',
+    ),
+  });
+  // toon-client 5.0 answers `channel <anything> --help` with the channel help, exiting 0.
+  const channel = { exitCode: 0, stdout: 'toon-client channel open|deposit <amount>|close|settle|status\n', stderr: '' };
+  const top = { exitCode: 0, stdout: 'Usage: toon-client <command>\n\nCommands:\n  channel\n', stderr: '' };
+  const runHelp = async (_binary, _version, path) => (path.length === 0 ? top : channel);
+
+  assert.deepEqual(await checkRepo(root, runHelp), [
+    'plugins/toon-client/skills/sending-with-toon-client/SKILL.md: `toon-client channel frobnicate status` is not' +
+      ' a command of toon-client 5.0.0 (`toon-client channel frobnicate --help` does not name `frobnicate`)',
+  ]);
+});
+
+test('a subcommand its parent\'s own `Commands:` section lists passes, and one it does not fails', async () => {
+  const root = repo({
+    'plugins/toon-cli/skills/sending-with-toon-cli/SKILL.md': sendingWithToonCli(
+      'Run `toon event publish`, then `toon event frobnicate`.',
+    ),
+  });
+  const help = {
+    '': 'Usage: toon [OPTIONS] <COMMAND>\n\nCommands:\n  event\n',
+    event: 'Usage: toon event <COMMAND>\n\nCommands:\n  publish\n  query\n',
+    'event publish': 'Usage: toon event publish [OPTIONS]\n',
+  };
+  // Like toon-client 5.0, this client answers an unknown subcommand with its parent's help.
+  const runHelp = async (_binary, _version, path) => ({
+    exitCode: 0,
+    stdout: help[path.join(' ')] ?? help[path.slice(0, -1).join(' ')],
+    stderr: '',
+  });
+
+  assert.deepEqual(await checkRepo(root, runHelp), [
+    'plugins/toon-cli/skills/sending-with-toon-cli/SKILL.md: `toon event frobnicate` is not' +
+      ' a command of toon 0.3.0 (`toon event frobnicate --help` does not name `frobnicate`)',
+  ]);
+});
+
+test('a flag on the bare binary that its help lacks fails, naming only that help', async () => {
+  const root = repo({
+    'plugins/toon-cli/skills/sending-with-toon-cli/SKILL.md': sendingWithToonCli('Run `toon --version --frob`.'),
+  });
+  const { runHelp } = binaries('toon@0.3.0 --version');
+
+  assert.deepEqual(await checkRepo(root, runHelp), [
+    'plugins/toon-cli/skills/sending-with-toon-cli/SKILL.md: `toon --frob` is not a flag of toon 0.3.0' +
+      ' (`toon --help` does not name it)',
+  ]);
+});
+
+test('a `~~~` fence hides a backtick too, and a fence indented four spaces is not one', () => {
+  const text = [
+    '~~~',
+    "awk '{ gsub(/[`]/, \"\") }' file",
+    '~~~',
+    'Then run `toon-client channel status`.',
+  ].join('\n');
+  assert.deepEqual(namedCommands(text, 'toon-client'), [['channel', 'status']]);
+
+  const indented = ['    ```', 'a `toon-client send` span', '    ```'].join('\n');
+  assert.equal(outsideCodeBlocks(indented), indented);
+});
+
+test('blanking fenced blocks keeps every line in its place', () => {
+  const text = ['before', '```sh', 'toon send x', '```', 'after `toon y`'].join('\n');
+  const blanked = outsideCodeBlocks(text);
+
+  assert.deepEqual(blanked.split('\n'), ['before', '', '', '', 'after `toon y`']);
 });

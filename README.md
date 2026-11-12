@@ -158,8 +158,8 @@ The skills moved here from `toon_cli`
 
 - [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json): the marketplace and
   its four plugins.
-- [`checks/skill-commands.mjs`](checks/skill-commands.mjs): the check that every command a
-  skill names exists in its client's lowest supported version.
+- [`checks/skill-commands.mjs`](checks/skill-commands.mjs): the check that every command, and
+  every long flag, a skill names exists in its client's lowest supported version.
 - [`CLAUDE.md`](CLAUDE.md): how the AFK factory turns a `ready-for-agent` issue into a pull
   request, and the gate it runs.
 - [`docs/agents/`](docs/agents/): the issue tracker, the triage labels and the domain docs.

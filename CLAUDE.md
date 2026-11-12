@@ -31,10 +31,12 @@ labelled `wayfinder:*` are skipped (`.sandcastle/ready-issues.ts`). A human merg
 (else the `checks` job) of `.github/workflows/ci.yml` **on `main`**, in order. If there is
 no `ci.yml`, no such job, or no runnable step, the gate runs nothing and logs that loudly.
 Today `ci.yml`'s `gate` job runs `checks/skill-commands.mjs`, which fails when a skill
-names a `toon` or `toon-client` command that the lowest version in its sending skill's
-frontmatter range lacks, or names another plugin's binary. It fetches both clients, so the
-gate needs network access. Keep the job's `run:` steps free of `if:` and `${{ }}`: the gate
-skips those.
+names a `toon` or `toon-client` command, or a long flag of one, that the lowest version in
+its sending skill's frontmatter range lacks, or names another plugin's binary. A command
+whose `--help` exits 0 still fails when a command before it lists subcommands and its help
+does not name the word (toon-client 5.0 answers `channel <anything> --help` with the
+channel help). It fetches both clients, so the gate needs network access. Keep the job's
+`run:` steps free of `if:` and `${{ }}`: the gate skips those.
 The rule lives in one place, `gateFromCi` in `.sandcastle/run-gate.ts`, tested by
 `.sandcastle/run-gate.test.ts`.
 

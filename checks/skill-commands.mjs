@@ -1,8 +1,11 @@
 // Fails when a skill names a command, or a flag of one, that its client's lowest supported
 // version does not have.
 //
-// The rule for what counts as a named command is toon_cli's `named_commands`
-// (tests/skill.rs), so both repositories agree on what a skill names.
+// A named command is an inline code span, or a line of a code block, that starts with the
+// binary. That rule began as toon_cli's `named_commands` (tests/skill.rs), but this check
+// reads more than it does: it blanks fenced code blocks before reading inline spans, joins a
+// line that ends in `\` with the next, ends a command at a shell operator, and checks the
+// long flags a command passes as well as its words.
 //
 // Run from the repository root: `node checks/skill-commands.mjs`. It fetches each client
 // at the low end of the range its sending skill's frontmatter states (toon from the
@@ -59,7 +62,9 @@ export function namedFlags(text, binary) {
 }
 
 /**
- * The text after `<binary> ` of every inline code span and code-block line that starts with it.
+ * The text after `<binary> ` of every inline code span and code-block line that starts with it,
+ * up to the first shell operator: what follows a pipe or `&&` belongs to another program.
+ * A line ending in `\` is read together with the line after it.
  *
  * @param {string} text
  * @param {string} binary
@@ -71,26 +76,70 @@ function namedInvocations(text, binary) {
     .split('`')
     .filter((_, i) => i % 2 === 1)
     .filter((span) => span.startsWith(prefix));
-  const lines = text
-    .split('\n')
+  const lines = joinContinuations(text)
     .map((line) => line.trimStart())
     .filter((line) => line.startsWith(prefix));
-  return [...spans, ...lines].map((named) => named.slice(prefix.length));
+  return [...spans, ...lines].map((named) => ownWords(named.slice(prefix.length)));
 }
 
 /**
- * `text` with the lines of its fenced code blocks, fences included, left empty: a backtick
- * inside a code block (an `awk` or shell script) is not an inline code span's, and counting it
- * would pair every later span's backticks wrongly, so no later span would be checked.
+ * The lines of `text`, with each line that ends in `\` joined to the line after it.
+ *
+ * @param {string} text
+ * @returns {string[]}
+ */
+function joinContinuations(text) {
+  const lines = [];
+  let pending = null;
+  for (const line of text.split('\n')) {
+    const joined = pending === null ? line : `${pending} ${line.trimStart()}`;
+    if (/\\\s*$/.test(joined)) {
+      pending = joined.replace(/\s*\\\s*$/, '');
+    } else {
+      lines.push(joined);
+      pending = null;
+    }
+  }
+  if (pending !== null) lines.push(pending);
+  return lines;
+}
+
+/**
+ * The words of `rest` that are the command's own: those before a pipe, `&`, `;`, `)` or a
+ * bare `--`. After `--` a word is an argument even when it looks like a flag.
+ *
+ * @param {string} rest
+ */
+function ownWords(rest) {
+  const words = [];
+  for (const word of rest.split(/\s+/).filter(Boolean)) {
+    if (word === '--') break;
+    const operator = word.search(/[|&;)]/);
+    if (operator === -1) {
+      words.push(word);
+      continue;
+    }
+    if (operator > 0) words.push(word.slice(0, operator));
+    break;
+  }
+  return words.join(' ');
+}
+
+/**
+ * `text` with the lines of its fenced code blocks, fences included, left empty, so it keeps
+ * its line count: a backtick inside a code block (an `awk` or shell script) is not an inline
+ * code span's, and counting it would pair every later span's backticks wrongly, so no later
+ * span would be checked. A fence is indented at most three spaces, as in CommonMark; four or
+ * more make an indented code block, which holds no fence.
  *
  * @param {string} text
  */
-function outsideCodeBlocks(text) {
+export function outsideCodeBlocks(text) {
   let fence = null;
   return text
     .split('\n')
     .map((line) => {
-      const marker = line.match(/^\s*(`{3,}|~{3,})/)?.[1];
+      const marker = line.match(/^ {0,3}(`{3,}|~{3,})/)?.[1];
       if (fence === null && marker !== undefined) {
         fence = marker;
         return '';
@@ -181,12 +230,13 @@ export async function checkRepo(root, runHelp) {
 /**
  * The named commands that `binary` at `version` lacks, and the flags those commands lack.
  *
- * A command exists when `--help` on it exits 0 and, where its parent lists subcommands, its
- * help names its last word: a client that answers `--help` on an unknown subcommand with its
- * parent's help, exiting 0 (toon-client 5.0 does for `channel <anything>`), has not shown
- * that subcommand. Under a parent that lists none, the last word is an argument
- * (`toon add echo`). A flag
- * exists when the command's help, or the binary's own help for global options, names it.
+ * A command exists when `--help` on it exits 0 and each of its words is named by its own help
+ * wherever the command before it lists subcommands. A client that answers `--help` on an
+ * unknown subcommand with its parent's help, exiting 0 (toon-client 5.0 does for
+ * `channel <anything>`), has not shown that subcommand. Under a command that lists none, the
+ * next word is an argument (`toon add echo`), and so is every word after it.
+ *
+ * A flag exists when the command's help, or the binary's own help for global options, names it.
  *
  * @param {string} binary
  * @param {string} version
@@ -195,48 +245,49 @@ export async function checkRepo(root, runHelp) {
  * @param {RunHelp} runHelp
  */
 async function checkCommands(binary, version, named, flags, runHelp) {
+  /** @param {string[]} command */
+  const commandLine = (command) => [binary, ...command].join(' ');
   const help = new Map();
   /** @param {string[]} command */
   const helpFor = async (command) => {
-    const commandLine = [binary, ...command].join(' ');
-    if (!help.has(commandLine)) help.set(commandLine, await runHelp(binary, version, command));
-    return help.get(commandLine);
+    const line = commandLine(command);
+    if (!help.has(line)) help.set(line, await runHelp(binary, version, command));
+    return help.get(line);
   };
   const problems = [];
-  const missing = new Set();
+  const reported = new Set();
   for (const { path, command } of named) {
-    const commandLine = [binary, ...command].join(' ');
-    const { exitCode, stdout = '', stderr } = await helpFor(command);
-    const last = command.at(-1);
+    const line = commandLine(command);
+    const { exitCode, stderr } = await helpFor(command);
     if (exitCode !== 0) {
-      missing.add(commandLine);
+      reported.add(line);
       problems.push(
-        `${path}: \`${commandLine}\` is not a command of ${binary} ${version}` +
-          ` (\`${commandLine} --help\` exited ${exitCode}): ${stderr.trim().split('\n')[0]}`,
+        `${path}: \`${line}\` is not a command of ${binary} ${version}` +
+          ` (\`${line} --help\` exited ${exitCode}): ${stderr.trim().split('\n')[0]}`,
       );
-    } else if (
-      last !== undefined &&
-      !namesWord(stdout, last) &&
-      listsSubcommands((await helpFor(command.slice(0, -1))).stdout ?? '', [binary, ...command.slice(0, -1)].join(' '))
-    ) {
-      missing.add(commandLine);
+      continue;
+    }
+    for (let i = 0; i < command.length; i++) {
+      const parent = command.slice(0, i);
+      if (!listsSubcommands((await helpFor(parent)).stdout, commandLine(parent))) break;
+      const own = command.slice(0, i + 1);
+      if (namesWord((await helpFor(own)).stdout, command[i])) continue;
+      reported.add(line);
       problems.push(
-        `${path}: \`${commandLine}\` is not a command of ${binary} ${version}` +
-          ` (\`${commandLine} --help\` does not name \`${last}\`)`,
+        `${path}: \`${line}\` is not a command of ${binary} ${version}` +
+          ` (\`${commandLine(own)} --help\` does not name \`${command[i]}\`)`,
       );
+      break;
     }
   }
   for (const { path, command, flag } of flags) {
-    const commandLine = [binary, ...command].join(' ');
-    if (missing.has(commandLine)) continue;
-    const own = await helpFor(command);
-    if (namesWord(own.stdout ?? '', flag)) continue;
-    const global = command.length === 0 ? own : await helpFor([]);
-    if (namesWord(global.stdout ?? '', flag)) continue;
-    problems.push(
-      `${path}: \`${commandLine} ${flag}\` is not a flag of ${binary} ${version}` +
-        ` (neither \`${commandLine} --help\` nor \`${binary} --help\` names it)`,
-    );
+    const line = commandLine(command);
+    if (reported.has(line)) continue;
+    if (namesWord((await helpFor(command)).stdout, flag)) continue;
+    if (command.length > 0 && namesWord((await helpFor([])).stdout, flag)) continue;
+    const consulted =
+      command.length > 0 ? `neither \`${line} --help\` nor \`${binary} --help\` names it` : `\`${binary} --help\` does not name it`;
+    problems.push(`${path}: \`${line} ${flag}\` is not a flag of ${binary} ${version} (${consulted})`);
   }
   return problems;
 }
@@ -250,8 +301,7 @@ async function checkCommands(binary, version, named, flags, runHelp) {
  */
 function listsSubcommands(help, commandLine) {
   if (/^Commands:/m.test(help)) return true;
-  const escaped = commandLine.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  return new RegExp(`${escaped} [a-z-]+(?: <[^>]+>)?\\|[a-z-]+`).test(help);
+  return new RegExp(`${escapeRegExp(commandLine)} [a-z-]+(?: <[^>]+>)?\\|[a-z-]+`).test(help);
 }
 
 /**
@@ -261,8 +311,12 @@ function listsSubcommands(help, commandLine) {
  * @param {string} word
  */
 function namesWord(help, word) {
-  const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  return new RegExp(`(^|[^\\w-])${escaped}(?![\\w-])`).test(help);
+  return new RegExp(`(^|[^\\w-])${escapeRegExp(word)}(?![\\w-])`).test(help);
+}
+
+/** @param {string} text `text` as a regular expression that matches it literally. */
+function escapeRegExp(text) {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 /**
